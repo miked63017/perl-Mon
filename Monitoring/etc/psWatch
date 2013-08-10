@@ -1,0 +1,15 @@
+#!/usr/bin/perl
+ 
+use strict;
+ 
+ my @services = ( 'mongrel_rails', 'apache2', 'mysql' );
+ my $alert_email = 'your-email-here\@your-domain-name';
+ my $host = `/bin/hostname`;
+ chomp $host;
+ 
+ foreach my $service (@services) {
+ my $status = `/bin/ps cax | /bin/grep $service`;
+ if (!$status) {
+ my $alert = `/usr/bin/mailx -s "ALERT! $host: $service stopped" $alert_email < /dev/null > /dev/null`;
+ }
+ }

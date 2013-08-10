@@ -1,0 +1,21 @@
+#!/usr/bin/perl
+
+use Sender;
+
+use Data::Dumper;
+use Dialect;
+use Client::Command;
+
+my $command = Client::Command->new(command_name => "check_disk",
+                                   command_line => "df -h", );
+
+my $send = Sender->new(ClientID => 'ConfigPusher');
+$send->connect();
+my $content = Dialect->new();
+my $deliverable = $content->encode($command);
+
+
+
+$send->send("/queue/Config.Realize", $deliverable);
+
+$send->disconnect();

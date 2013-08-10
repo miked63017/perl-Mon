@@ -1,0 +1,32 @@
+#!/usr/bin/perl
+
+use Net::STOMP::Client;
+use Data::Dumper;
+use MIME::Base64;
+
+
+my $stomp = Net::STOMP::Client->new( host => "192.168.1.2",
+                                     port => 61613,
+                                   );
+
+$peer = $stomp->peer();
+printf("connected to broker %s (IP %s), port %d\n", $peer->host(), $peer->addr(), $peer->port());
+
+$stomp->connect(
+      login    => "system",
+      passcode => "manager",
+  );
+
+printf("speaking STOMP %s with server %s\n", $stomp->version(), $stomp->server() || "UNKNOWN");
+
+printf("session %s started\n", $stomp->session());
+
+$stomp->subscribe(destination => "/queue/Hello.listen", 
+                  id => "",
+                  ack => 'client', );
+
+while ($frame = $stomp->wait_for_frames()) {
+  print Dumper($frame);
+}
+$stomp->disconnect();
+printf("session ended\n");

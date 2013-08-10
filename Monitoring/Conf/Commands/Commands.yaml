@@ -1,0 +1,4 @@
+---
+check_disk: !!perl/hash:Client::Command
+  command_line: df -h
+  command_name: check_disk

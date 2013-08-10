@@ -1,0 +1,63 @@
+#!/usr/bin/perl
+
+use Net::STOMP::Client;
+use Data::Dumper;
+use MIME::Base64;
+use YAML::Syck;
+
+
+my $stomp = Net::STOMP::Client->new( host => "801-puppet-prod-01.host.advance.net",
+                                     port => 61613,
+                                     sockopts => {
+                                                  # path of the directory containing trusted certificates
+                                                  SSL_ca_path   => "/home/mdonlon/.mcollective.d",
+                                                  # client certificate to present
+                                                  SSL_cert_file => "/home/mdonlon/.mcollective.d/peadmin-cert.pem",
+                                                  # client private key
+                                                  SSL_key_file  => "/home/mdonlon/.mcollective.d/peadmin-private.pem",
+                                                  # passphrase of the client private key
+                                                  SSL_passwd_cb => sub { return("f478882c6f22d0ff164b6b025a69dd74e1ba431f") }, 
+                                                 }
+                                   );
+
+$peer = $stomp->peer();
+printf("connected to broker %s (IP %s), port %d\n", $peer->host(), $peer->addr(), $peer->port());
+
+$stomp->connect(
+      login    => "mcollective",
+      passcode => "S5fNabwqLIxvujbXR7a8",
+  );
+
+printf("speaking STOMP %s with server %s\n", $stomp->version(), $stomp->server() || "UNKNOWN");
+
+printf("session %s started\n", $stomp->session());
+
+$stomp->subscribe(destination => "/topic/mcollective.discovery.command", 
+                  id => "",   );
+
+$stomp->subscribe(destination => "/topic/mcollective.discovery.reply",
+                  id => "",   );
+
+$YAML::Syck::ImplicitTyping = 1;
+while ($frame = $stomp->wait_for_frames()) {
+  #print Dumper($frame);
+  #print Dumper(${$frame}[1]);
+  #print Dumper(${$frame}[2]) . "\n";
+  my $encoded = ${$frame}[2];
+  #print "${$encoded}\n";
+  my $data = `/home/mdonlon/decode.rb '${$encoded}'`;
+  print Dumper($data);
+  #chomp(${$encoded});
+  #my $data = decode_base64($frame->body);
+  #chomp($data);
+  #print $data . "\n\n\n";
+  #$data =~ s/!ruby\/sym\ /:/g;
+  $mc_reply = Load($data);
+  #print Dumper($mc_reply);
+  $mc_body = Load($mc_reply->{":body"});
+  print $mc_reply->{":senderid"} . "> " . $mc_body . "\n";
+  print Dumper($mc_reply) . "\n\n\n\n\n";
+  print Dumper($mc_body) . "\n\n\n\n\n";
+}
+$stomp->disconnect();
+printf("session ended\n");

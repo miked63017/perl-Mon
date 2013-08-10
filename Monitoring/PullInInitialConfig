@@ -1,0 +1,30 @@
+#!/usr/bin/perl
+
+
+use Listener;
+use Data::Dumper;
+use Dialect;
+use Command::Writer;
+
+my $commandObj = Command::Writer->new();
+
+my $listener = Listener->new(ClientID => 'ConfigPuller');
+$listener->connect();
+my $stream = $listener->listen("/queue/Config.Realize", 'AutoDiscover');
+my $content = Dialect->new();
+while (my $frame = $stream->wait_for_frames()) {
+  print Dumper($frame);
+  my $commandObj = Command::Writer->new();
+  $commandObj->get_current();
+  my $deliverable = $content->decode($frame->body);
+  print Dumper($deliverable);
+  $commandObj->{CurYaml}->{$deliverable->{command_name}} = $deliverable;
+  print Dumper($commandObj->{CurYaml});
+  $commandObj->write_current();
+  $listener->stomp->ack(frame => $frame);
+  undef($commandObj);
+}
+
+
+
+$listener->disconnect();

@@ -1,0 +1,17 @@
+#!/usr/bin/perl
+
+require '../Sender.pm';
+
+require '../Listener.pm';
+use Data::Dumper;
+require '../Dialect.pm';
+
+my $send = Sender->new();
+$send->connect();
+my $content = Dialect->new();
+my $deliverable = $content->encode($ARGV[0]);
+
+
+$send->send("/queue/testQ", $deliverable);
+
+$send->disconnect();

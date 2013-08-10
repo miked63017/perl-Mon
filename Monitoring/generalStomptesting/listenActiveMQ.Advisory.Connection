@@ -1,0 +1,24 @@
+#!/usr/bin/perl
+
+require '../Sender.pm';
+
+require '../Listener.pm';
+use Data::Dumper;
+require '../Dialect.pm';
+
+my $listener = Listener->new();
+$listener->connect();
+my $stream = $listener->listen("/queue/testQ", 'ClientID123');
+my $content = Dialect->new();
+while (my $frame = $stream->wait_for_frames()) {
+  print Dumper($frame);
+  print $frame->[1]->{"ack"} . "\n";
+  $listener->stomp->ack(frame => $frame)
+}
+
+
+
+$listener->disconnect();
+
+
+

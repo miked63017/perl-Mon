@@ -1,0 +1,21 @@
+#!/usr/bin/perl
+use Sender;
+use Dialect;
+use Data::Dumper;
+
+use Client::Command;
+
+my $cmd = Client::Command->new(command_name => 'CommandName',
+                                command_line => '/opt/command/line',
+                             );
+
+
+my $content = Dialect->new();
+my $deliverable = $content->encode($cmd);
+print Dumper($deliverable);
+my $send = Sender->new();
+$send->connect();
+#Figure out crap to send
+$send->send( "/topic/testingtopic", $deliverable );
+
+$send->disconnect();

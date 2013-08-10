@@ -1,0 +1,6 @@
+#!/usr/bin/perl
+
+use Nagfigurator::Reader;
+
+my $nag = Nagfigurator::Read->new();
+$nag->read();

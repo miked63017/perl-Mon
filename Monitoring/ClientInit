@@ -1,0 +1,6 @@
+#!/usr/bin/perl
+
+use Client;
+
+
+my $client = Client->new();

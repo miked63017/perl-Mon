@@ -1,0 +1,37 @@
+#!/usr/bin/perl
+
+use Net::STOMP::Client;
+use Data::Dumper;
+
+my $stomp = Net::STOMP::Client->new( host => "192.168.1.2",
+                                     port => 61613,
+                                   );
+
+$peer = $stomp->peer();
+printf("connected to broker %s (IP %s), port %d\n", $peer->host(), $peer->addr(), $peer->port());
+
+$stomp->connect(
+      login    => "system",
+      passcode => "manager",
+  );
+
+printf("speaking STOMP %s with server %s\n", $stomp->version(), $stomp->server() || "UNKNOWN");
+
+printf("session %s started\n", $stomp->session());
+$stomp->send(
+      destination => "/queue/test",
+      body        => "Test of receipts 1...\n",
+      receipt     => $stomp->uuid(),
+  );
+$stomp->send(
+      destination => "/queue/test",
+      body        => "Test of receipts 2...\n",
+      receipt     => $stomp->uuid(),
+  );
+# wait at most 10 seconds for all pending receipts
+$stomp->wait_for_receipts(timeout => 10);
+# complain if some receipts are still pending
+die("Receipt not received!\n") if $stomp->receipts();
+print Dumper($stomp);
+$stomp->disconnect();
+printf("session ended\n");
